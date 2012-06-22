@@ -4,8 +4,8 @@ require File.expand_path('../lib/endpoint/version', __FILE__)
 Gem::Specification.new do |gem|
   gem.authors       = ['Adam Williams']
   gem.email         = ['adam@thewilliams.ws']
-  gem.description   = %q{TODO: Write a gem description}
-  gem.summary       = %q{TODO: Write a gem summary}
+  gem.description   = %q{Provides for connecting to API endpoints.}
+  gem.summary       = %q{Provides for connecting to API endpoints.}
   gem.homepage      = ''
 
   gem.files         = `git ls-files`.split($\)
