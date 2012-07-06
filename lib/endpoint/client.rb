@@ -15,7 +15,7 @@ module Endpoint
     #   sensitive information around the system.
     #
     #   :proxy - A Hash of options for the proxy configuration:
-    #     :host - The proxy server host.
+    #     :server - The proxy server host.
     #     :port - The proxy server port.
     #
     #   :timeout - The HTTP request timeout. Defaults to 500.
