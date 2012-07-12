@@ -102,7 +102,8 @@ module Endpoint
     NON_REQUEST_OPTIONS = [:observer, :observer_body_filters, :proxy]
     def extract_request_options(options, defaults = {})
       defaults.tap do |opts|
-        if proxy_options = options[:proxy]
+        proxy_options = options[:proxy]
+        unless proxy_options.nil? || proxy_options.empty?
           opts[:http_proxyaddr] = proxy_options[:server]
           opts[:http_proxyport] = proxy_options[:port]
         end

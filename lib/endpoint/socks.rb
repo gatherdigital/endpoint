@@ -15,7 +15,6 @@ module Endpoint
 
     # Since we're using a SOCKS proxy, we may need to teach Net::HTTP to do
     # Proxy our way.
-    #
     def self.enable_net_http_socks_proxy
       @enabled_net_http_socks_proxy ||= begin
         require 'socksify/http'
@@ -28,9 +27,14 @@ module Endpoint
       end
     end
 
+    # Returns true if a proxy appears to be running for the given
+    # configuration.
+    def self.running?(config=default_config)
+      Proxy.new(config).running?
+    end
+
     # Start the proxy. If a work Block is given, it is called and then the
     # proxy is stopped. If no work is given, the proxy is left running.
-    #
     def self.start(config=default_config, &work)
       enable_net_http_socks_proxy
       proxy = Proxy.new(config)
