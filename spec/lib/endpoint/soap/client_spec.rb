@@ -57,8 +57,9 @@ describe Endpoint::Soap::Client do
   describe 'request' do
     it 'includes Content-Length header' do
       body = 'hello there you all'
+      soap = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<env:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:env=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <env:Body>hello there you all</env:Body>\n</env:Envelope>\n"
       stub_request(:post, endpoint)
-        .with(headers: { 'Content-Length' => body.size }, body: body)
+        .with(headers: { 'Content-Length' => soap.size }, body: soap)
         .to_return(soap_response)
       subject.request body: body
     end
@@ -85,14 +86,6 @@ describe Endpoint::Soap::Client do
       expect do
         subject.request
       end.should raise_error(/Too many failures.*Connection reset by peer/)
-    end
-
-    it 'provides parsed response to block' do
-      stub_request(:post, endpoint).to_return(soap_response)
-      response = double :response
-      subject.request do |actual|
-        actual.should equal(response)
-      end
     end
   end
 

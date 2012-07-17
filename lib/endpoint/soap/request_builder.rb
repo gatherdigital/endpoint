@@ -75,7 +75,11 @@ module Endpoint
             if header
               xml[envns].Header { header.call xml }
             end
-            xml[envns].Body { body.call xml }
+            if body.respond_to?(:call)
+              xml[envns].Body { body.call xml }
+            else
+              xml[envns].Body body
+            end
           }
         end
         output = builder.to_xml(indent:(compact ? 0 : 2))

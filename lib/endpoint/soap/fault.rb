@@ -17,7 +17,7 @@ module Endpoint
         if @fault_node = response.at_css('Fault')
           @code = @fault_node.at_css(version == 1 ? 'faultcode' : 'Code').content
           @reason = @fault_node.at_css(version == 1 ? 'faultstring' : 'Reason').content rescue nil
-          super "SOAP fault (#{@code}): #{@reason}"
+          super "SOAP fault (#{@code}): #{@reason || 'Reason not provided in response.'}"
         else
           super 'SOAP fault did not occur'
         end
