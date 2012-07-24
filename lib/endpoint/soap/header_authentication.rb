@@ -49,6 +49,9 @@ module Endpoint
 
       def perform_authentication
         @access_token = authenticate
+        Endpoint::AuthenticationResult.new true
+      rescue Endpoint::Soap::Fault
+        Endpoint::AuthenticationResult.new false, $!.message
       end
 
       def authenticated?

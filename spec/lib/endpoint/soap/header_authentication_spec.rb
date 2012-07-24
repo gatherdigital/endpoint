@@ -26,17 +26,16 @@ SOAP_AUTH
 
 
   let(:endpoint) { 'http://endpoint.com' }
+  let(:fault_xml) { '<Envelope><Body><Fault><Code>INVALID TOKEN</Code><Reason>Simulated Fault</Reason></Fault></Body></Envelope>' }
+  let(:soap_version) { 2 }
 
   let(:soap_response) {{
-    status: 200,
-    body: '<Envelope><Body></Body></Envelope>'
+    status: 200, body: '<Envelope><Body></Body></Envelope>'
   }}
 
-  let(:soap_fault_response) {{
-    body: '<Envelope><Body><Fault><Code>INVALID TOKEN</Code><Reason></Reason></Fault></Body></Envelope>'
-  }}
+  let(:soap_fault_response) {{ body: fault_xml }}
 
-  subject { Client.new 2, endpoint }
+  subject { Client.new soap_version, endpoint }
 
   it 'authenticates before making a request' do
     access_token = 'access token'
@@ -58,5 +57,23 @@ SOAP_AUTH
     subject.should_receive(:authenticate).and_return('access token')
     subject.should_receive(:expired_access_token?).with(an_instance_of(Endpoint::Soap::Fault)).and_return(true)
     subject.authenticated_request {|xml| xml.Stuff 'hi!'}
+  end
+
+  describe 'perform_authentication' do
+    let(:fault) { Endpoint::Soap::Fault.new(soap_version, Nokogiri::XML(fault_xml)) }
+
+    it 'answers success when a token can be obtained' do
+      subject.should_receive(:authenticate).and_return('access token')
+      response = subject.perform_authentication
+      response.success?.should == true
+      response.message.should be_nil
+    end
+
+    it 'answers failure when any fault occurs' do
+      subject.should_receive(:authenticate).and_raise(fault)
+      response = subject.perform_authentication
+      response.success?.should == false
+      response.message.should == fault.message
+    end
   end
 end
