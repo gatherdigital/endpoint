@@ -69,6 +69,20 @@ SOAP_AUTH
       response.message.should be_nil
     end
 
+    it 'answers failure when a token cannot be obtained' do
+      subject.should_receive(:authenticate).and_return(nil)
+      response = subject.perform_authentication
+      response.success?.should == false
+      response.message.should_not be_nil
+    end
+
+    it 'answers failure when a blank token is obtained' do
+      subject.should_receive(:authenticate).and_return('   ')
+      response = subject.perform_authentication
+      response.success?.should == false
+      response.message.should_not be_nil
+    end
+
     it 'answers failure when any fault occurs' do
       subject.should_receive(:authenticate).and_raise(fault)
       response = subject.perform_authentication

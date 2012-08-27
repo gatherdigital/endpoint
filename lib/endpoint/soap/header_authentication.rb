@@ -49,7 +49,11 @@ module Endpoint
 
       def perform_authentication
         @access_token = authenticate
-        Endpoint::AuthenticationResult.new true
+        unless @access_token.nil? || @access_token.strip == ''
+          Endpoint::AuthenticationResult.new true
+        else
+          Endpoint::AuthenticationResult.new false, 'An access token could not be obtained with the credentials provided.'
+        end
       rescue Endpoint::Soap::Fault
         Endpoint::AuthenticationResult.new false, $!.message
       end
