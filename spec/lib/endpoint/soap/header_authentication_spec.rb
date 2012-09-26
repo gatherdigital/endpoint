@@ -60,7 +60,7 @@ SOAP_AUTH
   end
 
   describe 'perform_authentication' do
-    let(:fault) { Endpoint::Soap::Fault.new(soap_version, Nokogiri::XML(fault_xml)) }
+    let(:fault) { Endpoint::Soap::Fault.new(soap_version, Nokogiri::XML(fault_xml), 'INVALID TOKEN', 'Simulated Fault') }
 
     it 'answers success when a token can be obtained' do
       subject.should_receive(:authenticate).and_return('access token')

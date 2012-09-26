@@ -28,7 +28,14 @@ module Endpoint
       end
 
       def fault
-        @fault ||= Fault.new(@version, self)
+        @fault ||= fault_builder(@version).build(self)
+      end
+
+      # Subclasses may override if they are capable of providing a better
+      # Fault::Builder, which is useful when the reason for the fault might be
+      # found in non-standard XML elements.
+      def fault_builder(version)
+        Fault.const_get("Builder#{version}").new
       end
 
       def fault?

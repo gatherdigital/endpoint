@@ -3,32 +3,79 @@ module Endpoint
 
     class Fault < StandardError
 
+      class AbstractBuilder
+        def build(response)
+          fault_node = response.at_css('Fault')
+          if fault_node
+            code = extract_code fault_node rescue nil
+            reason = extract_reason fault_node rescue nil
+          end
+          Fault.new version, fault_node, code, reason
+        end
+      end
+
+      class Builder1 < AbstractBuilder
+        def version; 1; end
+
+        def extract_code(node)
+          node.at_css('faultcode').content
+        end
+
+        def extract_reason(node)
+          node.at_css('faultstring').content
+        end
+      end
+
+      class Builder2 < AbstractBuilder
+        def version; 2; end
+
+        def extract_code(node)
+          node.at_css('Code').content
+        end
+
+        def extract_reason(node)
+          node.at_css('Reason').content
+        end
+      end
+
+      # The version of SOAP.
+      attr_reader :version
+
+      # Returns the Nokogiri::Document of the SOAP response.
+      attr_reader :response
+
       # Returns the SOAP fault code String.
       attr_reader :code
 
       # Returns the SOAP fault reason String.
       attr_reader :reason
 
-      # Returns the Nokogiri::Document of the SOAP response.
-      attr_reader :response
-
-      def initialize(version, response)
-        @response = response
-        if @fault_node = response.at_css('Fault')
-          @code = @fault_node.at_css(version == 1 ? 'faultcode' : 'Code').content
-          @reason = @fault_node.at_css(version == 1 ? 'faultstring' : 'Reason').content rescue nil
-          super "SOAP fault (#{@code}): #{@reason || 'Reason not provided in response.'}"
+      def initialize(version, node, code, reason)
+        @version, @node = version, node
+        self.code, self.reason = code, reason
+        if occurred?
+          super "SOAP fault (#{code}): #{reason || 'Reason not found in response.'}"
         else
-          super 'SOAP fault did not occur'
+          super 'SOAP fault not found in response.'
         end
       end
 
       def occurred?
-        !!@fault_node
+        !!@node
       end
 
       def at_css(*args)
-        occurred? ? @fault_node.at_css(*args) : nil
+        occurred? ? @node.at_css(*args) : nil
+      end
+
+      private
+
+      def code=(value)
+        @code = value.blank? ? nil : value
+      end
+
+      def reason=(value)
+        @reason = value.blank? ? nil : value
       end
     end
 

@@ -2,50 +2,26 @@ require 'spec_helper'
 
 describe Endpoint::Soap::Fault do
 
-  subject { described_class.new version, response }
+  def xml(s = '<Fault></Fault>')
+    Nokogiri::XML(s)
+  end
 
-  let(:version) { 1 }
-  let(:response) { Nokogiri::XML(fault) }
-  let(:fault) { %Q(
-    <Body>
-      <stuff>not value</stuff>
-      <Fault>
-        <whatever><stuff>value</stuff></whatever>
-        <faultcode>Fault Code!</faultcode>
-        <faultstring>Fault String!</faultstring>
-      </Fault>
-    </Body>
-  )}
+  let(:code) { 'Fault Code' }
+  let(:reason) { 'Fault Reason' }
+
+  def fault(xml = '<Fault></Fault>', code = 'Fault Code', reason = 'Fault Reason')
+    described_class.new 1, Nokogiri::XML(xml), code, reason
+  end
+
+  it 'considers blank reason as nil' do
+    described_class.new(1, xml, code, '').reason.should be_nil
+  end
+
+  it 'considers blank code as nil' do
+    described_class.new(1, xml, '', reason).code.should be_nil
+  end
 
   it 'responds to at_css navigation method within Fault' do
-    subject.at_css('stuff').content.should == 'value'
-  end
-
-  describe 'SOAP 1.1' do
-    it 'extracts code' do
-      subject.code.should == 'Fault Code!'
-    end
-
-    it 'extracts reason' do
-      subject.reason.should == 'Fault String!'
-    end
-  end
-
-  describe 'SOAP 1.2' do
-    let(:version) { 2 }
-    let(:fault) { %Q(
-      <Fault>
-        <Code>Yo Code!</Code>
-        <Reason>Yo Reason!</Reason>
-      </Fault>
-    )}
-
-    it 'extracts code' do
-      subject.code.should == 'Yo Code!'
-    end
-
-    it 'extracts reason' do
-      subject.reason.should == 'Yo Reason!'
-    end
+    described_class.new(1, xml('<Fault><whatever><stuff>value</stuff></whatever></Fault>'), code, reason).at_css('stuff').content.should == 'value'
   end
 end
