@@ -7,9 +7,10 @@ module Endpoint
       def_delegators :@response, :code, :request, :response, :body, :headers
       def_delegators :@xml, :at_css, :css, :at_xpath, :xpath
 
-      def initialize(version, response)
+      def initialize(version, response, fault_builder)
         @version = version
         @response = response
+        @fault_builder = fault_builder
         @xml = response.parsed_response
         @xml.remove_namespaces!
       end
@@ -28,14 +29,7 @@ module Endpoint
       end
 
       def fault
-        @fault ||= fault_builder(@version).build(self)
-      end
-
-      # Subclasses may override if they are capable of providing a better
-      # Fault::Builder, which is useful when the reason for the fault might be
-      # found in non-standard XML elements.
-      def fault_builder(version)
-        Fault.const_get("Builder#{version}").new
+        @fault ||= @fault_builder.build(self)
       end
 
       def fault?

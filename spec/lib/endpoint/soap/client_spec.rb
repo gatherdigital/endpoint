@@ -124,6 +124,10 @@ describe Endpoint::Soap::Client do
         subject.request request_options
       }.to raise_error(Endpoint::Soap::Fault, /Server/)
     end
+
+    it 'answers the builder for version 1' do
+      subject.fault_builder.should be_instance_of(Endpoint::Soap::Fault::Builder1)
+    end
   end
 
   describe 'SOAP 1.2' do
@@ -141,6 +145,10 @@ describe Endpoint::Soap::Client do
       expect {
         subject.request
       }.to raise_error(Endpoint::Soap::Fault, /Server/)
+    end
+
+    it 'answers the builder for version 2' do
+      subject.fault_builder.should be_instance_of(Endpoint::Soap::Fault::Builder2)
     end
   end
 

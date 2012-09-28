@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Endpoint::Soap::Fault::Builder1 do
+describe Endpoint::Soap::Fault::Builder2 do
 
   def fault(xml)
     described_class.new.build Nokogiri::XML(xml)

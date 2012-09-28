@@ -17,6 +17,13 @@ module Endpoint
         @request_builder = Endpoint::Soap::RequestBuilder.new(options[:builder] || {})
       end
 
+      # Subclasses may override if they are capable of providing a better
+      # Fault::Builder, which is useful when the reason for the fault might be
+      # found in non-standard XML elements.
+      def fault_builder
+        Fault.const_get("Builder#{version}").new
+      end
+
       # A layer above Endpoint::Client#perform_request, adds options for SOAP
       # HTTP requests. See also #request.
       #
@@ -39,7 +46,7 @@ module Endpoint
         end
 
         request_options = { format: :xml, headers: headers }
-        Response.new(version, perform_request(:post, endpoint, options.merge(request_options))).tap do |response|
+        Response.new(version, perform_request(:post, endpoint, options.merge(request_options)), fault_builder).tap do |response|
           raise response.fault if response.fault?
           raise response.error if response.error?
         end
