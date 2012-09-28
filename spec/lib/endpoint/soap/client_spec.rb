@@ -13,6 +13,7 @@ describe Endpoint::Soap::Client do
   }}
 
   let(:soap_fault_response) {{
+    status: 500,
     body: '<Envelope><Body><Fault><Code>Server</Code><Reason></Reason></Fault></Body></Envelope>'
   }}
 
@@ -87,6 +88,15 @@ describe Endpoint::Soap::Client do
         subject.request
       end.should raise_error(/Too many failures.*Connection reset by peer/)
     end
+
+    it 'retries 404 only 5 times' do
+      stub_request(:post, endpoint)
+        .to_return({ status: 404, body: '<html></html>' })
+        .times(5)
+      expect do
+        subject.request
+      end.should raise_error(/Too many failures.*404/)
+    end
   end
 
   describe 'SOAP 1.1' do
@@ -95,6 +105,7 @@ describe Endpoint::Soap::Client do
       action: 'http://host.com/action'
     }}
     let(:soap_fault_response) {{
+      status: 500,
       body: '<Envelope><Body><Fault><faultcode>Server</faultcode><faultstring></faultstring></Fault></Body></Envelope>'
     }}
 

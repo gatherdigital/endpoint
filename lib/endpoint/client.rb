@@ -39,6 +39,10 @@ module Endpoint
     #   request body content. These are added to any associated with the client
     #   already.
     #
+    #   :error_response_codes - An Array of response code Integers which, if
+    #   the response matches, should be retried update to 5 times. If no other
+    #   response is received, it is considered an error.
+    #
     # The options provided to initialize are utilized in each request, though
     # overridden by those provided to this method. This is convenient if you
     # would like to provide the same observer_body_filters for each request,
@@ -55,10 +59,14 @@ module Endpoint
 
       parser = ResponseParser.new
       opts = { parser: parser }.merge(request_options)
+      error_response_codes = options[:error_response_codes] || []
       try_count = 0
       begin
         response = self.class.__send__(method, url, opts)
-      rescue Timeout::Error, Errno::ECONNRESET => e
+        if error_response_codes.include?(response.code)
+          raise Endpoint::HttpError, response, 'Client has received an unacceptable response from the endpoint.'
+        end
+      rescue Timeout::Error, Errno::ECONNRESET, Endpoint::HttpError => e
         try_count += 1
         if try_count < 5
           retry
