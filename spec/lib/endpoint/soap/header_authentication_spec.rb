@@ -37,26 +37,36 @@ SOAP_AUTH
 
   subject { Client.new soap_version, endpoint }
 
-  it 'authenticates before making a request' do
-    access_token = 'access token'
-    stub_request(:post, endpoint)
-      .with(body: soap_authenticated_request(access_token))
-      .to_return(soap_response)
-    subject.should_receive(:authenticate).and_return(access_token)
-    subject.authenticated_request {|xml| xml.Stuff 'hi!'}
-  end
+  context 'before request' do
+    it 'establishes access_token' do
+      access_token = 'access token'
+      stub_request(:post, endpoint)
+        .with(body: soap_authenticated_request(access_token))
+        .to_return(soap_response)
+      subject.should_receive(:authenticate).and_return(access_token)
+      subject.authenticated_request {|xml| xml.Stuff 'hi!'}
+    end
 
-  it 're-authenticates expired access token' do
-    subject.access_token = 'old token'
-    stub_request(:post, endpoint)
-      .with(body: soap_authenticated_request('old token'))
-      .to_return(soap_fault_response)
-    stub_request(:post, endpoint)
-      .with(body: soap_authenticated_request('access token'))
-      .to_return(soap_response)
-    subject.should_receive(:authenticate).and_return('access token')
-    subject.should_receive(:expired_access_token?).with(an_instance_of(Endpoint::Soap::Fault)).and_return(true)
-    subject.authenticated_request {|xml| xml.Stuff 'hi!'}
+    it 'raises error on failure' do
+      result = Endpoint::AuthenticationResult.new false, 'Me Message'
+      subject.should_receive(:authenticate).and_return(result)
+      expect do
+        subject.authenticated_request {|xml| raise 'Never to be called' }
+      end.to raise_error('Me Message')
+    end
+
+    it 're-authenticates expired access token' do
+      subject.access_token = 'old token'
+      stub_request(:post, endpoint)
+        .with(body: soap_authenticated_request('old token'))
+        .to_return(soap_fault_response)
+      stub_request(:post, endpoint)
+        .with(body: soap_authenticated_request('access token'))
+        .to_return(soap_response)
+      subject.should_receive(:authenticate).and_return('access token')
+      subject.should_receive(:expired_access_token?).with(an_instance_of(Endpoint::Soap::Fault)).and_return(true)
+      subject.authenticated_request {|xml| xml.Stuff 'hi!'}
+    end
   end
 
   describe 'perform_authentication' do
@@ -88,6 +98,14 @@ SOAP_AUTH
       response = subject.perform_authentication
       response.success?.should == false
       response.message.should == fault.message
+    end
+
+    it 'allows subclass to answer Endpoint::AuthenticationResult for more control over message' do
+      result = Endpoint::AuthenticationResult.new true
+      result.access_token = 'Hello!'
+      subject.should_receive(:authenticate).and_return(result)
+      subject.perform_authentication.should eq(result)
+      subject.access_token.should == 'Hello!'
     end
   end
 end

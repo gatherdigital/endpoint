@@ -34,12 +34,12 @@ module Endpoint
       #
       # Returns an Endpoint::Soap::Response.
       def authenticated_request(options = {}, &block)
-        perform_authentication unless authenticated?
+        perform_authentication! unless authenticated?
         begin
           request options.merge(header: security_header_method), &block
         rescue Endpoint::Soap::Fault => fault
           if expired_access_token?(fault)
-            perform_authentication
+            perform_authentication!
             request options.merge(header: security_header_method), &block
           else
             raise fault
@@ -47,12 +47,25 @@ module Endpoint
         end
       end
 
+      def perform_authentication!
+        perform_authentication.tap do |result|
+          raise Endpoint::AuthenticationError, result.message unless result.success?
+        end
+      end
+
       def perform_authentication
-        @access_token = authenticate
-        unless @access_token.nil? || @access_token.strip == ''
-          Endpoint::AuthenticationResult.new true
-        else
-          Endpoint::AuthenticationResult.new false, 'An access token could not be obtained with the credentials provided.'
+        result = authenticate
+        case result
+        when Endpoint::AuthenticationResult
+          @access_token = result.access_token
+          result
+        when String, nil
+          @access_token = result
+          unless @access_token.nil? || @access_token.strip == ''
+            Endpoint::AuthenticationResult.new true
+          else
+            Endpoint::AuthenticationResult.new false, 'An access token could not be obtained with the credentials provided.'
+          end
         end
       rescue Endpoint::Soap::Fault
         Endpoint::AuthenticationResult.new false, $!.message
