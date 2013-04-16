@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/gatherdigital/endpoint.png)](https://travis-ci.org/gatherdigital/endpoint)
+
 # Endpoint
 
 A Gem we use to make connecting to APIs easier on us. It's opinionated.
