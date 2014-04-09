@@ -1,4 +1,5 @@
 require 'fileutils'
+require 'endpoint/socks/socks_connection_adapter'
 
 module Endpoint
   module Socks
@@ -18,11 +19,15 @@ module Endpoint
     def self.enable_net_http_socks_proxy
       @enabled_net_http_socks_proxy ||= begin
         require 'socksify/http'
-        class << Net::HTTP
-          def Proxy(addr, port, user=nil, pass=nil)
-            return self unless addr # See Net::HTTP.Proxy implementation
-            SOCKSProxy(addr, port)
+        if RUBY_VERSION < "2.0"
+          class << Net::HTTP
+            def Proxy(addr, port, user=nil, pass=nil)
+              return self unless addr # See Net::HTTP.Proxy implementation
+              SOCKSProxy(addr, port)
+            end
           end
+        else
+          Endpoint::Client.connection_adapter SocksConnectionAdapter
         end
       end
     end

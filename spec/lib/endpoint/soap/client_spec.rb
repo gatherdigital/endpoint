@@ -86,7 +86,7 @@ describe Endpoint::Soap::Client do
       stub_request(:post, endpoint).to_raise(Errno::ECONNRESET).times(5)
       expect do
         subject.request
-      end.should raise_error(/Too many failures.*Connection reset by peer/)
+      end.to raise_error(/Too many failures.*Connection reset by peer/)
     end
 
     it 'retries 404 only 5 times' do
@@ -95,7 +95,7 @@ describe Endpoint::Soap::Client do
         .times(5)
       expect do
         subject.request
-      end.should raise_error(/Too many failures.*404/)
+      end.to raise_error(/Too many failures.*404/)
     end
   end
 
