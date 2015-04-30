@@ -30,7 +30,7 @@ module Endpoint
       end
 
       def command
-        ['ssh', '-n', '-c', 'blowfish', '-N', '-D', config[:port].to_s, "#{config[:user]}@#{config[:host]}"]
+        ['ssh', '-n', '-N', '-D', config[:port].to_s, "#{config[:user]}@#{config[:host]}"]
       end
 
       def pid
