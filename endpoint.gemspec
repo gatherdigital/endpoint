@@ -19,6 +19,9 @@ Gem::Specification.new do |gem|
   gem.add_runtime_dependency 'httparty', '>= 0.8.3', '< 2.0'
   gem.add_runtime_dependency 'socksify', '>= 1.4', '< 2.0'
 
+  gem.add_development_dependency 'pry'
+  gem.add_development_dependency 'pry-byebug'
+  gem.add_development_dependency 'pry-exception_explorer'
   gem.add_development_dependency 'rspec-core'
   gem.add_development_dependency 'rspec-expectations'
   gem.add_development_dependency 'rspec-mocks'
